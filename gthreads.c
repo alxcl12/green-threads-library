@@ -14,6 +14,8 @@ typedef struct gthr {
 		Unused,
 		Running,
 		Ready,
+        Main,
+        Finished
 	} state;
 } gthread;
 
@@ -25,8 +27,11 @@ ucontext_t interrupt_context;
 unsigned char *interrupt_stack;
 sigset_t interrupt_sigmask;
 
+ucontext_t finish_context;
+unsigned char *finish_stack;
+
 void gthread_schedule(){
-    printf("On interrupt, thread ID: %d\n", thread_currrent_id);
+    //printf("On interrupt, thread ID: %d\n", thread_currrent_id);
 
     do{
         thread_currrent_id = (thread_currrent_id + 1) % MAX_THREADS;
@@ -34,7 +39,7 @@ void gthread_schedule(){
 
     thread_current = &threads[thread_currrent_id];
 
-    printf("On interrupt exit, thread ID to be run: %d\n", thread_currrent_id);
+    //printf("On interrupt exit, thread ID to be run: %d\n", thread_currrent_id);
     thread_current->state = Running;
     setcontext(&thread_current->context);
 }
@@ -56,7 +61,6 @@ void gthread_setup_signal(){
 
     action.sa_sigaction = gthread_timer_interrupt_handler;
     sigemptyset(&action.sa_mask);
-    action.sa_flags = SA_RESTART | SA_SIGINFO;
 
     sigemptyset(&interrupt_sigmask);
     sigaddset(&interrupt_sigmask, SIGALRM);
@@ -64,17 +68,73 @@ void gthread_setup_signal(){
     sigaction(SIGALRM, &action, NULL);
 }
 
+void gthread_main_runner(){
+    gthread_schedule();
+}
+
+void gthread_finish_runner(){
+    threads[thread_currrent_id].state = Finished;
+    gthread_schedule();
+}
+
+void gthread_setup_main(){
+	unsigned char *stack;
+	gthread *thr = &threads[0];
+
+	stack = malloc(STACK_SIZE);
+	if (!stack){
+	    exit(-1);
+    }
+    getcontext(&thr->context);
+
+    thr->context.uc_stack.ss_sp = stack;
+    thr->context.uc_stack.ss_size = STACK_SIZE;
+    thr->context.uc_stack.ss_flags = 0;
+
+    sigemptyset(&thr->context.uc_sigmask);
+
+    makecontext(&thr->context, gthread_main_runner, 1);
+    thr->state = Main;
+}
+
+void gthread_setup_finish(){
+	unsigned char *stack = finish_stack;
+
+	stack = malloc(STACK_SIZE);
+	if (!stack){
+	    exit(-1);
+    }
+    getcontext(&finish_context);
+
+    finish_context.uc_stack.ss_sp = stack;
+    finish_context.uc_stack.ss_size = STACK_SIZE;
+    finish_context.uc_stack.ss_flags = 0;
+    finish_context.uc_link = &threads[0].context;
+
+    sigemptyset(&finish_context.uc_sigmask);
+
+    makecontext(&finish_context, gthread_finish_runner, 1);
+}
+
 void gthread_init(void){
     for(int i=0; i<MAX_THREADS; i++){
         threads[i].state = Unused;
     }
+    threads[0].state = Main;
 
     interrupt_stack = malloc(STACK_SIZE);
     if(interrupt_stack == NULL){
         exit(1);
     }
 
+    finish_stack = malloc(STACK_SIZE);
+    if(finish_stack == NULL){
+        exit(1);
+    }
+
     gthread_setup_signal();
+    gthread_setup_main();
+    gthread_setup_finish();
 
     struct itimerval timer;
     timer.it_interval.tv_sec = 0;
@@ -82,6 +142,10 @@ void gthread_init(void){
     timer.it_value = timer.it_interval;
 
     setitimer(ITIMER_REAL, &timer, NULL);
+}
+
+void gthread_start(){
+    setcontext(&threads[0].context);
 }
 
 void gthread_run(void *func){
@@ -106,6 +170,7 @@ void gthread_run(void *func){
     thr->context.uc_stack.ss_sp = stack;
     thr->context.uc_stack.ss_size = STACK_SIZE;
     thr->context.uc_stack.ss_flags = 0;
+    thr->context.uc_link = &finish_context;
 
     sigemptyset(&thr->context.uc_sigmask);
 
@@ -113,28 +178,59 @@ void gthread_run(void *func){
     thr->state = Ready;
 }
 
+void gthread_join(){
+    int done = 1;
+    do{
+        done = 1;
+        for(int i=0; i<MAX_THREADS; i++){
+            if(threads[i].state != Unused){
+                done = 0;
+            }
+        }
+    }while(done != 0);
+}
+
 void a(){
-    for(int i=0; i< 1<<20;i++){
-        printf("a\n");
+    printf("IN A");
+    for(int i=0;i< 1<<30;i++){
+        for(int j=0;j< 1<<30;j++){
+
+        }
     }
+
+    for(int i=0; i< 1<<20;i++){
+        if(i == 1<<9){
+            printf("a\n");
+        }
+    }
+    printf("Done a\n");
 }
 
 void b(){
     for(int i=0; i< 1<<15;i++){
-        printf("b\n");
+        if(i == 1<<10){
+            printf("b\n");
+        }
     }
+    printf("Done b\n");
 }
 
 void c(){
     for(int i=0; i< 1<<10;i++){
-        printf("c\n");
+        if(i==1<<3){
+            printf("c\n");
+        }
     }
+    printf("Done c\n");
 }
 
 void d(){
     for(int i=0; i< 1<<10;i++){
-        printf("d\n");
+        if(i==1<<7){
+            printf("d\n");
+        }
     }
+    printf("Done d\n");
 }
 
 int main(void){
@@ -145,7 +241,10 @@ int main(void){
     gthread_run(c);
     gthread_run(d);
 
-    //jump start
-    thread_current = &threads[0];
-    setcontext(&threads[0].context);
+    // //jump start
+    // thread_current = &threads[0];
+    // setcontext(&threads[0].context);
+
+    //gthread_join();
+    gthread_start();
 }
