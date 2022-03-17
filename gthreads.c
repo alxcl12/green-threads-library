@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <ucontext.h>
 #include <sys/time.h>
@@ -19,6 +20,15 @@ typedef struct gthr {
 	} state;
 } gthread;
 
+typedef struct gthr_mutex {
+    gthread owner;
+	enum {
+        unlocked,
+        locked
+	} state;
+} gthread_mutex;
+
+
 gthread threads[MAX_THREADS];
 gthread *thread_current;
 int thread_currrent_id = 0;
@@ -30,28 +40,52 @@ sigset_t interrupt_sigmask;
 ucontext_t finish_context;
 unsigned char *finish_stack;
 
+int cn = 0;
+
 void gthread_schedule(){
-    //printf("On interrupt, thread ID: %d\n", thread_currrent_id);
+    #ifdef DEBUG
+    printf("On interrupt, thread ID: %d\n", thread_currrent_id);
+
+    printf("-----------\n");
+    for(int i=0;i<5;i++){
+        printf("%d ", threads[i].state);
+    }
+    printf("\n-----------\n");
+    #endif
 
     do{
         thread_currrent_id = (thread_currrent_id + 1) % MAX_THREADS;
     }while(threads[thread_currrent_id].state != Ready);
 
-    thread_current = &threads[thread_currrent_id];
+    if(thread_current->state != Main && thread_current->state != Finished){
+        thread_current->state = Ready;
+    }
 
-    //printf("On interrupt exit, thread ID to be run: %d\n", thread_currrent_id);
+    thread_current = &threads[thread_currrent_id];
     thread_current->state = Running;
-    setcontext(&thread_current->context);
+
+    #ifdef DEBUG
+    printf("On interrupt exit, thread ID to be run: %d\n", thread_currrent_id);
+    #endif
+
+    swapcontext(&interrupt_context, &thread_current->context);
 }
 
 void gthread_timer_interrupt_handler(int warn, siginfo_t *sig, void *prev_context){
+    #ifdef DEBUG
     printf("On handler..\n");
+    #endif
+
+    if(thread_current->state != Finished){
+        thread_current->state = Ready;
+    }
+
     getcontext(&interrupt_context);
     interrupt_context.uc_stack.ss_sp = interrupt_stack;
     interrupt_context.uc_stack.ss_size = STACK_SIZE;
 
     sigemptyset(&interrupt_context.uc_sigmask);
-    makecontext(&interrupt_context, gthread_schedule, 1);
+    makecontext(&interrupt_context, gthread_schedule, 0);
 
     swapcontext(&thread_current->context, &interrupt_context);
 }
@@ -59,6 +93,7 @@ void gthread_timer_interrupt_handler(int warn, siginfo_t *sig, void *prev_contex
 void gthread_setup_signal(){
     struct sigaction action;
 
+    memset(&action, 0, sizeof(action));
     action.sa_sigaction = gthread_timer_interrupt_handler;
     sigemptyset(&action.sa_mask);
 
@@ -69,32 +104,55 @@ void gthread_setup_signal(){
 }
 
 void gthread_main_runner(){
-    gthread_schedule();
+    printf("In main..\n");
+
+    getcontext(&interrupt_context);
+    interrupt_context.uc_stack.ss_sp = interrupt_stack;
+    interrupt_context.uc_stack.ss_size = STACK_SIZE;
+
+    sigemptyset(&interrupt_context.uc_sigmask);
+    makecontext(&interrupt_context, gthread_schedule, 0);
+
+    swapcontext(&thread_current->context, &interrupt_context);
 }
 
 void gthread_finish_runner(){
     threads[thread_currrent_id].state = Finished;
-    gthread_schedule();
+    cn++;
+
+    #ifdef DEBUG
+    printf("COUNTER: %d\n", cn);
+    #endif
+
+    getcontext(&threads[0].context);
+    // threads[0].context.uc_stack.ss_sp = threads[0].context.;
+    // threads[0].context.uc_stack.ss_size = STACK_SIZE;
+
+    // sigemptyset(&threads[0].context.uc_sigmask);
+    makecontext(&threads[0].context, gthread_main_runner, 0);
+
+    thread_currrent_id = 0;
+    swapcontext(&thread_current->context, &threads[0].context);
 }
 
 void gthread_setup_main(){
 	unsigned char *stack;
-	gthread *thr = &threads[0];
 
 	stack = malloc(STACK_SIZE);
 	if (!stack){
 	    exit(-1);
     }
-    getcontext(&thr->context);
+    getcontext(&threads[0].context);
 
-    thr->context.uc_stack.ss_sp = stack;
-    thr->context.uc_stack.ss_size = STACK_SIZE;
-    thr->context.uc_stack.ss_flags = 0;
+    threads[0].context.uc_stack.ss_sp = stack;
+    threads[0].context.uc_stack.ss_size = STACK_SIZE;
+    threads[0].context.uc_stack.ss_flags = 0;
 
-    sigemptyset(&thr->context.uc_sigmask);
+    sigemptyset(&threads[0].context.uc_sigmask);
 
-    makecontext(&thr->context, gthread_main_runner, 1);
-    thr->state = Main;
+    makecontext(&threads[0].context, gthread_main_runner, 0);
+    threads[0].state = Main;
+    thread_current = &threads[0];
 }
 
 void gthread_setup_finish(){
@@ -113,7 +171,7 @@ void gthread_setup_finish(){
 
     sigemptyset(&finish_context.uc_sigmask);
 
-    makecontext(&finish_context, gthread_finish_runner, 1);
+    makecontext(&finish_context, gthread_finish_runner, 0);
 }
 
 void gthread_init(void){
@@ -174,7 +232,7 @@ void gthread_run(void *func){
 
     sigemptyset(&thr->context.uc_sigmask);
 
-    makecontext(&thr->context, func, 1);
+    makecontext(&thr->context, func, 0);
     thr->state = Ready;
 }
 
@@ -191,11 +249,9 @@ void gthread_join(){
 }
 
 void a(){
-    printf("IN A");
-    for(int i=0;i< 1<<30;i++){
-        for(int j=0;j< 1<<30;j++){
+    printf("A for the first time\n");
+    for(int i=0;i< 1<<28;i++){
 
-        }
     }
 
     for(int i=0; i< 1<<20;i++){
@@ -241,10 +297,5 @@ int main(void){
     gthread_run(c);
     gthread_run(d);
 
-    // //jump start
-    // thread_current = &threads[0];
-    // setcontext(&threads[0].context);
-
-    //gthread_join();
     gthread_start();
 }
