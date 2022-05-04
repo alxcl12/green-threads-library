@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <ucontext.h>
 #include <sys/time.h>
+#include <stdarg.h>
 
 typedef struct gthr {
     ucontext_t context;
@@ -22,7 +23,7 @@ typedef struct gthr_mutex {
 
 
 void gthread_init(void);
-int gthread_run(void *func);
+int gthread_run(void *func, int arg1, int arg2, int arg3);
 void gthread_join(int thread);
 void gthread_mutex_init(gthread_mutex *mutex);
 void gthread_mutex_unlock(gthread_mutex *mutex);

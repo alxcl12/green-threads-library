@@ -1,6 +1,6 @@
 #include "gthreads.h"
 
-#define MAX_THREADS 128
+#define MAX_THREADS 2048
 #define STACK_SIZE 4096
 #define NANOSECONDS 10
 
@@ -117,7 +117,7 @@ void gthread_init(void){
     gthread__setup_signal();
 }
 
-int gthread_run(void *func){
+int gthread_run(void *func, int arg1, int arg2, int arg3){
     unsigned char *stack, *finish_stack;
     gthread *thr;
 
@@ -145,7 +145,7 @@ int gthread_run(void *func){
 
     sigemptyset(&thr->context.uc_sigmask);
 
-    makecontext(&thr->context, func, 0);
+    makecontext(&thr->context, func, 3, arg1, arg2, arg3);
     thr->state = Ready;
 
     /////////////////////////////////////
@@ -226,7 +226,7 @@ void gthread_mutex_unlock(gthread_mutex *mutex){
     }
 }
 
-void a(){
+void a(int a,int b, int c){
     printf("A for the first time\n");
     gthread_mutex_lock(&mut);
     for(int i=0;i< 1<<28;i++){
@@ -242,7 +242,7 @@ void a(){
     printf("Done a\n");
 }
 
-void b(){
+void b(int a,int b, int c){
     gthread_mutex_lock(&mut);
     gthread_mutex_unlock(&mut);
     for(int i=0; i< 1<<15;i++){
@@ -253,7 +253,7 @@ void b(){
     printf("Done b\n");
 }
 
-void c(){
+void c(int a,int b, int c){
     for(int i=0; i< 1<<10;i++){
         if(i==1<<3){
             printf("c\n");
@@ -262,7 +262,7 @@ void c(){
     printf("Done c\n");
 }
 
-void d(){
+void d(int a,int b, int c){
     for(int i=0; i< 1<<10;i++){
         if(i==1<<7){
             printf("d\n");
@@ -276,10 +276,10 @@ int main(void){
     int p1,p2,p3,p4;
     gthread_init();
 
-    p1=gthread_run(a);
-    p2=gthread_run(b);
-    p3=gthread_run(c);
-    p4=gthread_run(d);
+    p1=gthread_run(a,1,2,3);
+    p2=gthread_run(b,1,2,3);
+    p3=gthread_run(c,1,2,3);
+    p4=gthread_run(d,1,2,3);
 
 
     for(int i = 0; i < 1<<28;i++){
