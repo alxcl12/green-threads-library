@@ -17,7 +17,6 @@ RGBImage rgbImage;
 
 #define WIDTH 800
 #define HEIGHT 600
-#define BLOCK_SIZE 1
 
 int ReadHeader(FILE* filePointer)
 {
@@ -70,7 +69,7 @@ int ReadHeader(FILE* filePointer)
     return fileMode;
 }
 
-void ReadPicture(const char* filename, RGBImage rgbImage)
+void ReadPicture(const char* filename)
 {
     FILE* filePointer;
     filePointer = fopen(filename, "rb");
@@ -94,10 +93,10 @@ void ReadPicture(const char* filename, RGBImage rgbImage)
                 //fread(&newLine, sizeof(newLine), 1, filePointer);
 
                 fread(&g, sizeof(g), 1, filePointer);
-                //                fread(&newLine, sizeof(newLine), 1, filePointer);
+                //fread(&newLine, sizeof(newLine), 1, filePointer);
 
                 fread(&b, sizeof(b), 1, filePointer);
-                //              fread(&newLine, sizeof(newLine), 1, filePointer);
+                //fread(&newLine, sizeof(newLine), 1, filePointer);
 
                 rgbImage.r[(i * WIDTH) + j] = r;
                 rgbImage.g[(i * WIDTH) + j] = g;
@@ -115,13 +114,13 @@ void filter_image(int posIBlock, int posJBlock, int empty)
     // int posJBlock = blockIdx.y;
 
     //printf("I: %d   J: %d\n", posIBlock, posJBlock);
-
+    printf("i: %d; j: %d\n", posIBlock, posJBlock);
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
         {
             float nR, nG, nB;
-            int pos = ((i + (posIBlock*8)) * WIDTH) + j + (posJBlock * 8);
+            int pos = ((i + posIBlock) * WIDTH) + j + posJBlock;
             nR = (float)rgbImage.r[pos] * 0.39 + (float)rgbImage.g[pos] * 0.75 + (float)rgbImage.b[pos] * 0.19;
             nG = (float)rgbImage.r[pos] * 0.35 + (float)rgbImage.g[pos] * 0.69 + (float)rgbImage.b[pos] * 0.17;
             nB = (float)rgbImage.r[pos] * 0.27 + (float)rgbImage.g[pos] * 0.53 + (float)rgbImage.b[pos] * 0.13;
@@ -150,21 +149,22 @@ int main(){
     rgbImage.g = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
     rgbImage.b = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
 
-    ReadPicture("nt-P6.ppm", rgbImage);
+    ReadPicture("nt-P6.ppm");
 
     gthread_init();
 
-    int threads[2500];
+    int threads[7500];
     int counter = 0;
-    for(int i = 0; i<WIDTH; i+=8){
-        for(int j = 0; j<HEIGHT; j+=8){
+    for(int i = 0; i<HEIGHT; i+=8){
+        for(int j = 0; j<WIDTH; j+=8){
             //filter
             threads[counter] = gthread_run(filter_image,i,j,0);
+            //printf("%d\n", threads[counter]);
             counter++;
         }
     }
     for(int i = 0;i<counter;i++){
-        gthread_join(threads[counter]);
+        gthread_join(threads[i]);
     }
 
 

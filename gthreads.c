@@ -1,8 +1,8 @@
 #include "gthreads.h"
 
-#define MAX_THREADS 2048
+#define MAX_THREADS 10000
 #define STACK_SIZE 4096
-#define NANOSECONDS 10
+#define NANOSECONDS 100
 
 gthread_mutex mut;
 
@@ -97,7 +97,6 @@ void gthread__resume_timer(){
 
 void gthread__finish_runner(){
     threads[thread_currrent_id].state = Finished;
-
     #ifdef DEBUG
     printf("COUNTER: %d\n", cn);
     #endif
@@ -181,7 +180,13 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
 }
 
 void gthread_join(int thread){
+    // printf("THREAD: %d\n", thread);
+    // for(int i=0;i<10;i++){
+    //     printf("State: %d, Waiting on: %d\n", threads[i].state, threads[i].waiting_on);
+    // }
+
     if (threads[thread].waiting_on == -1 && threads[thread].state == Ready){
+        printf("HERE\n");
         gthread__pause_timer();
         swapcontext(&threads[0].context, &threads[thread].context);
         gthread__resume_timer();
@@ -271,35 +276,35 @@ void d(int a,int b, int c){
     printf("Done d\n");
 }
 
-int main(void){
-    gthread_mutex_init(&mut);
-    int p1,p2,p3,p4;
-    gthread_init();
+// int main(void){
+//     gthread_mutex_init(&mut);
+//     int p1,p2,p3,p4;
+//     gthread_init();
 
-    p1=gthread_run(a,1,2,3);
-    p2=gthread_run(b,1,2,3);
-    p3=gthread_run(c,1,2,3);
-    p4=gthread_run(d,1,2,3);
-
-
-    for(int i = 0; i < 1<<28;i++){
-        if(i==1<<27){
-            printf("Hey\n");
-        }
-    }
-        for(int i = 0; i < 1<<28;i++){
-        if(i==1<<27){
-            printf("Hey2\n");
-        }
-    }
-    gthread_join(p4);
-    gthread_join(p3);
-    gthread_join(p2);
-    gthread_join(p1);
+//     p1=gthread_run(a,1,2,3);
+//     p2=gthread_run(b,1,2,3);
+//     p3=gthread_run(c,1,2,3);
+//     p4=gthread_run(d,1,2,3);
 
 
-    int x;
-    printf("Hey LAST\n");
-    return 0;
-}
+//     for(int i = 0; i < 1<<28;i++){
+//         if(i==1<<27){
+//             printf("Hey\n");
+//         }
+//     }
+//         for(int i = 0; i < 1<<28;i++){
+//         if(i==1<<27){
+//             printf("Hey2\n");
+//         }
+//     }
+//     gthread_join(p4);
+//     gthread_join(p3);
+//     gthread_join(p2);
+//     gthread_join(p1);
+
+
+//     int x;
+//     printf("Hey LAST\n");
+//     return 0;
+// }
 
