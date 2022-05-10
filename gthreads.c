@@ -186,7 +186,6 @@ void gthread_join(int thread){
     // }
 
     if (threads[thread].waiting_on == -1 && threads[thread].state == Ready){
-        printf("HERE\n");
         gthread__pause_timer();
         swapcontext(&threads[0].context, &threads[thread].context);
         gthread__resume_timer();
