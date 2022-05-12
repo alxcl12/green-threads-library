@@ -149,7 +149,7 @@ int main(){
     rgbImage.g = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
     rgbImage.b = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
 
-    ReadPicture("nt-P6.ppm");
+    ReadPicture("../nt-P6.ppm");
 
     gthread_init();
 

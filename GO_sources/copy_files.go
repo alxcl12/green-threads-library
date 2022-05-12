@@ -9,8 +9,8 @@ import (
 )
 
 func copy(wg *sync.WaitGroup, index int) {
-	var filename_in = "../files/tst" + strconv.Itoa(index)
-	var filename_out = "../files/ost" + strconv.Itoa(index)
+	var filename_in = "../../files/tst" + strconv.Itoa(index)
+	var filename_out = "../../files/ost" + strconv.Itoa(index)
 
 	//fmt.Println(filename_in)
 	in, err := os.Open(filename_in)

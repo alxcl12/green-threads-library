@@ -18,7 +18,7 @@ void copy(int arg1, int arg2, int arg3){
     FILE *in, *out;
     char buffer[1024];
 
-    char filename_in[14] = "../files/tst";
+    char filename_in[16] = "../../files/tst";
     char* nr;
     nr = itoa(arg1,10);
 
@@ -31,7 +31,7 @@ void copy(int arg1, int arg2, int arg3){
 
     in = fopen(filename_in, "rb");
 
-    filename_in[9] = 'o';
+    filename_in[12] = 'o';
     out = fopen(filename_in, "w");
 
     if(in && out){
