@@ -54,3 +54,4 @@ dkms.conf
 .vscode
 gthreads
 gthreads_debug
+input/files/*

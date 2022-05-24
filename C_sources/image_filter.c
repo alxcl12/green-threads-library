@@ -19,40 +19,33 @@ RGBImage rgbImage;
 #define WIDTH 800
 #define HEIGHT 600
 
-int ReadHeader(FILE* filePointer)
-{
+int read_header(FILE* filePointer){
     int width, height, bitMax, fileMode;
     char ch;
-    if (fscanf(filePointer, "P%c\n", &ch) != 1)
-    {
+    if (fscanf(filePointer, "P%c\n", &ch) != 1){
         //bad read
         return -1;
     }
 
-    if (ch == '3')
-    {
+    if (ch == '3'){
         fileMode = 3;
     }
 
-    if (ch == '6')
-    {
+    if (ch == '6'){
         fileMode = 6;
     }
 
     //skipping comment
     ch = getc(filePointer);
-    while (ch == '#')
-    {
-        do
-        {
+    while (ch == '#'){
+        do{
             ch = getc(filePointer);
         } while (ch != '\n');
         ch = getc(filePointer);
     }
 
     //asuming 1 line comment, next up should be resolution
-    if (!isdigit(ch))
-    {
+    if (!isdigit(ch)){
         //bad format
         return -1;
     }
@@ -61,8 +54,7 @@ int ReadHeader(FILE* filePointer)
 
     fscanf(filePointer, "%d%d%d\n", &width, &height, &bitMax);
 
-    if (bitMax != 255)
-    {
+    if (bitMax != 255){
         //bad color mode
         return -1;
     }
@@ -70,26 +62,20 @@ int ReadHeader(FILE* filePointer)
     return fileMode;
 }
 
-void ReadPicture(const char* filename)
-{
+void read_picture(const char* filename){
     FILE* filePointer;
     filePointer = fopen(filename, "rb");
 
-    if (filePointer)
-    {
-        if (ReadHeader(filePointer) != 6)
-        {
+    if (filePointer){
+        if (read_header(filePointer) != 6){
             //bad image header
             return;
         }
 
         uint8_t r, g, b;
-        char newLine;
 
-        for (int i = 0; i < HEIGHT; i++)
-        {
-            for (int j = 0; j < WIDTH; j++)
-            {
+        for (int i = 0; i < HEIGHT; i++){
+            for (int j = 0; j < WIDTH; j++){
                 fread(&r, sizeof(r), 1, filePointer);
                 //fread(&newLine, sizeof(newLine), 1, filePointer);
 
@@ -150,7 +136,7 @@ int main(){
     rgbImage.g = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
     rgbImage.b = (int*)malloc(WIDTH * HEIGHT * sizeof(int));
 
-    ReadPicture("../nt-P6.ppm");
+    read_picture("../input/picture/nt-P6.ppm");
 
     gthread_init();
 
@@ -181,7 +167,7 @@ int main(){
 
     //write to file
     FILE* test;
-    test = fopen("test.ppm", "wb");
+    test = fopen("out/image/test.ppm", "wb");
     fprintf(test, "P6\n# CREATOR: GIMP PNM Filter Version 1.1\n800 600\n255\n");
     for (int i = 0; i < HEIGHT; i++)
     {

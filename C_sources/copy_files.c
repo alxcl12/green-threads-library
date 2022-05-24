@@ -19,21 +19,20 @@ void copy(int arg1, int arg2, int arg3){
     FILE *in, *out;
     char buffer[1024];
 
-    char filename_in[16] = "../../files/tst";
+    char filename_in[22] = "../input/files/tst";
     char* nr;
     nr = itoa(arg1,10);
 
-    int digits = 1;
-    if(arg1 > 9){
-        digits = 2;
-    }
+    int digits = arg1 / 10 + 1;
 
     strncat(filename_in, nr, digits);
 
     in = fopen(filename_in, "rb");
 
-    filename_in[12] = 'o';
-    out = fopen(filename_in, "w");
+    char filename_out[17] = "out/files/out";
+    strncat(filename_out, nr, digits);
+
+    out = fopen(filename_out, "w");
 
     if(in && out){
         while(fread(&buffer, sizeof(char), 1024, in) != 0){
