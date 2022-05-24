@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 char* itoa(int val, int base){
 	static char buf[32] = {0};
@@ -47,6 +48,11 @@ int main(){
     int threads[101];
     gthread_init();
     int counter = 1;
+
+    struct timeval start,stop;
+    gettimeofday(&start, NULL);
+    long long startTime = (long long)start.tv_sec * 1000 + (long long)start.tv_usec / 1000;
+
     for(int i=1;i<101;i++){
         threads[counter]=gthread_run(copy,i,0,0);
         counter++;
@@ -55,6 +61,12 @@ int main(){
     for(int i=1;i<101;i++){
         gthread_join(threads[i]);
     }
+
+    gettimeofday(&stop, NULL);
+    long long endTime = (long long)stop.tv_sec * 1000 + (long long)stop.tv_usec / 1000;
+    long long time = endTime - startTime;
+
+    printf("%lld\n", time);
 
     return 0;
 }

@@ -1,50 +1,105 @@
 package main
 
 import (
-	"image"
-	"image/color"
+	"bufio"
+	"fmt"
 	"os"
-
-	"github.com/lmittmann/ppm"
+	"time"
 )
 
 var WIDTH = 800;
 var HEIGHT = 600;
 
 
-func make_block_sepia(img image.Image, new *image.RGBA,iBlock int, jBlock int){
+type RGBImage struct {
+    r []int
+    g []int
+	b []int
+}
 
+var rgbImage RGBImage;
+
+func make_block_sepia(iBlock int, jBlock int){
 	for i := 0; i < 8; i++{
 		for j := 0; j < 8; j++{
-			col := img.At(iBlock+i, jBlock+j)
-			r, g, b, a := col.RGBA()
-			r = uint32(float32(r) * 0.39 + float32(g) * 0.75 + float32(b) * 0.19);
-			g = uint32(float32(r) * 0.35 + float32(g) * 0.69 + float32(b) * 0.17);
-			b = uint32(float32(r) * 0.27 + float32(g) * 0.53 + float32(b) * 0.13);
-			new.Set(iBlock+i, jBlock+j, color.RGBA{uint8(r),uint8(g),uint8(b),uint8(a)})
+			pos := ((i + iBlock) * WIDTH) + j + jBlock;
 
+			nR := float32(rgbImage.r[pos]) * 0.39 + float32(rgbImage.g[pos]) * 0.75 + float32(rgbImage.b[pos]) * 0.19;
+            nG := float32(rgbImage.r[pos]) * 0.35 + float32(rgbImage.g[pos]) * 0.69 + float32(rgbImage.b[pos]) * 0.17;
+            nB := float32(rgbImage.r[pos]) * 0.27 + float32(rgbImage.g[pos]) * 0.53 + float32(rgbImage.b[pos]) * 0.13;
+
+			rgbImage.r[pos] = int(nR)
+			rgbImage.g[pos] = int(nG)
+			rgbImage.b[pos] = int(nB)
+
+			if (rgbImage.r[pos] > 255) {
+                rgbImage.r[pos] = 255;
+            }
+            if (rgbImage.g[pos] > 255) {
+                rgbImage.g[pos] = 255;
+            }
+            if (rgbImage.b[pos] > 255) {
+                rgbImage.b[pos] = 255;
+            }
+		}
+	}
+}
+
+func ReadPicture(filename string) {
+    file, _ := os.Open(filename)
+
+    bufr := bufio.NewReader(file)
+	_,_,_ = bufr.ReadLine()
+	_,_,_ = bufr.ReadLine()
+	_,_,_ = bufr.ReadLine()
+	_,_,_ = bufr.ReadLine()
+
+	for i := 0; i < HEIGHT; i++ {
+		for j := 0; j < WIDTH; j++ {
+			r, _ :=bufr.ReadByte();
+			g, _ :=bufr.ReadByte();
+			b, _ :=bufr.ReadByte();
+
+			rgbImage.r[(i*WIDTH) + j] = int(r);
+			rgbImage.g[(i*WIDTH) + j] = int(g);
+			rgbImage.b[(i*WIDTH) + j] = int(b);
 		}
 	}
 }
 
 func main() {
-	r,err := os.Open("../nt-P6.ppm")
+	rgbImage.r = make([]int, WIDTH*HEIGHT*4);
+	rgbImage.g = make([]int, WIDTH*HEIGHT*4);
+	rgbImage.b = make([]int, WIDTH*HEIGHT*4);
+	ReadPicture("../nt-P6.ppm");
 
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-	pic, err := ppm.Decode(r);
+	t := time.Now()
+	start := t.UnixMilli()
 
-	new := image.NewRGBA(pic.Bounds())
 	for i := 0; i < HEIGHT; i+=8 {
 		for j := 0; j < WIDTH; j+=8 {
-			go make_block_sepia(pic, new, i, j);
+			go make_block_sepia(i, j);
 		}
 	}
 
-	out,err := os.Create("test.ppm")
-	ppm.Encode(out, new);
+	t = time.Now()
+	stop := t.UnixMilli()
+
+	diff := stop - start;
+	fmt.Println(diff);
+
+	out,_ := os.Create("test.ppm")
+	f := bufio.NewWriter(out)
+
+	f.WriteString("P6\n# CREATOR: GIMP PNM Filter Version 1.1\n800 600\n255\n")
+
+	for i := 0; i < HEIGHT; i++ {
+		for j := 0; j < WIDTH; j++ {
+			f.WriteByte(byte(rgbImage.r[(i*WIDTH) + j]))
+			f.WriteByte(byte(rgbImage.g[(i*WIDTH) + j]))
+			f.WriteByte(byte(rgbImage.b[(i*WIDTH) + j]))
+		}
+	}
 }
 
 

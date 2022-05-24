@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 func copy(wg *sync.WaitGroup, index int) {
@@ -56,10 +57,20 @@ func copy(wg *sync.WaitGroup, index int) {
 func main() {
 	wg := new(sync.WaitGroup)
 
+	t := time.Now()
+	start := t.UnixMilli()
+
 	for i := 1; i < 100; i++ {
 		wg.Add(1)
 		go copy(wg, i)
 	}
 
 	wg.Wait()
+
+	t = time.Now()
+	stop := t.UnixMilli()
+
+	diff := stop - start;
+	fmt.Println(diff);
+
 }

@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "gthreads.h"
 
 typedef struct
@@ -114,7 +115,7 @@ void filter_image(int posIBlock, int posJBlock, int empty)
     // int posJBlock = blockIdx.y;
 
     //printf("I: %d   J: %d\n", posIBlock, posJBlock);
-    printf("i: %d; j: %d\n", posIBlock, posJBlock);
+    //printf("i: %d; j: %d\n", posIBlock, posJBlock);
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
@@ -153,6 +154,11 @@ int main(){
 
     gthread_init();
 
+    struct timeval start,stop;
+    gettimeofday(&start, NULL);
+    long long startTime = (long long)start.tv_sec * 1000 + (long long)start.tv_usec / 1000;
+
+
     int threads[7500];
     int counter = 0;
     for(int i = 0; i<HEIGHT; i+=8){
@@ -167,6 +173,11 @@ int main(){
         gthread_join(threads[i]);
     }
 
+    gettimeofday(&stop, NULL);
+    long long endTime = (long long)stop.tv_sec * 1000 + (long long)stop.tv_usec / 1000;
+    long long time = endTime - startTime;
+
+    printf("%lld\n", time);
 
     //write to file
     FILE* test;
