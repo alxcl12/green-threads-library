@@ -10,8 +10,8 @@ import (
 )
 
 func copy(wg *sync.WaitGroup, index int) {
-	var filename_in = "../../files/tst" + strconv.Itoa(index)
-	var filename_out = "../../files/ost" + strconv.Itoa(index)
+	var filename_in = "../input/files/tst" + strconv.Itoa(index)
+	var filename_out = "out/files/out" + strconv.Itoa(index)
 
 	//fmt.Println(filename_in)
 	in, err := os.Open(filename_in)
@@ -43,10 +43,6 @@ func copy(wg *sync.WaitGroup, index int) {
 		}
 
 		out.Write(buffer)
-
-		// // out the file content
-		// fmt.Println(string(buffer[:n]))
-
 	}
 	in.Close()
 	out.Close()

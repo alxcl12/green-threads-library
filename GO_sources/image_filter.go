@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-var WIDTH = 800;
-var HEIGHT = 600;
+const WIDTH = 800;
+const HEIGHT = 600;
 
 
 type RGBImage struct {
@@ -45,7 +45,7 @@ func make_block_sepia(iBlock int, jBlock int){
 	}
 }
 
-func ReadPicture(filename string) {
+func read_picture(filename string) {
     file, _ := os.Open(filename)
 
     bufr := bufio.NewReader(file)
@@ -71,7 +71,7 @@ func main() {
 	rgbImage.r = make([]int, WIDTH*HEIGHT*4);
 	rgbImage.g = make([]int, WIDTH*HEIGHT*4);
 	rgbImage.b = make([]int, WIDTH*HEIGHT*4);
-	ReadPicture("../nt-P6.ppm");
+	read_picture("../input/picture/nt-P6.ppm");
 
 	t := time.Now()
 	start := t.UnixMilli()
@@ -88,7 +88,7 @@ func main() {
 	diff := stop - start;
 	fmt.Println(diff);
 
-	out,_ := os.Create("test.ppm")
+	out,_ := os.Create("out/image/test.ppm")
 	f := bufio.NewWriter(out)
 
 	f.WriteString("P6\n# CREATOR: GIMP PNM Filter Version 1.1\n800 600\n255\n")
