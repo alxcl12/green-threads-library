@@ -1,6 +1,6 @@
 #include "gthreads.h"
 
-#define MAX_THREADS 10000
+#define MAX_THREADS 7520
 #define STACK_SIZE 4096
 #define NANOSECONDS 100
 
@@ -97,6 +97,7 @@ void gthread__resume_timer(){
 
 void gthread__finish_runner(){
     threads[thread_currrent_id].state = Finished;
+    //free(threads[thread_currrent_id].context.uc_stack.ss_sp);
     #ifdef DEBUG
     printf("COUNTER: %d\n", cn);
     #endif
@@ -148,14 +149,14 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
     thr->state = Ready;
 
     /////////////////////////////////////
-    finish_stack = malloc(STACK_SIZE);
+    finish_stack = malloc(STACK_SIZE/8);
     if (!finish_stack){
         exit(-1);
     }
     getcontext(&finish_contexts[i]);
 
     finish_contexts[i].uc_stack.ss_sp = finish_stack;
-    finish_contexts[i].uc_stack.ss_size = STACK_SIZE;
+    finish_contexts[i].uc_stack.ss_size = STACK_SIZE/8;
     finish_contexts[i].uc_stack.ss_flags = 0;
     finish_contexts[i].uc_link = &threads[0].context;
 
