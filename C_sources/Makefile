@@ -3,7 +3,7 @@ CC=gcc
 all:
 	$(CC) -Wall -o copy_files ../gthreads.c copy_files.c
 	$(CC) -Wall -o image_filter ../gthreads.c image_filter.c
-	$(CC) -Wall -o make_blocks ../gthreads.c make_blocks.c
+	$(CC) -Wall -o make_blocks ../gthreads.c make_blocks.c -lm
 
 clean:
 	rm -rf copy_files

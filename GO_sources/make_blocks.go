@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -31,13 +32,19 @@ func write_block(wg *sync.WaitGroup, iBlock int, jBlock int, count int){
 	defer out.Close()
 
 	bufr := bufio.NewWriter(out)
+	var polynom float64 = 0;
 	for i := 0; i < 8; i++{
 		for j := 0; j < 8; j++{
 			fmt.Fprintf(bufr, "%d ", matrix[iBlock + i][jBlock + j])
+			if(i==j){
+				polynom += math.Pow(float64(matrix[iBlock+i][jBlock+j]), float64(i))
+			}
 		}
 		fmt.Fprintf(bufr, "\n")
 		bufr.Flush()
 	}
+	fmt.Fprintf(bufr, "%f", polynom)
+	bufr.Flush()
 
 	out.Close()
 	wg.Done()

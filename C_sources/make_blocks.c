@@ -68,12 +68,17 @@ void write_block(int posIBlock, int posJBlock, int index)
     //printf("%s\n",filename_out);
 
     out = fopen(filename_out, "w");
+    double polynom = 0;
     for (int i = 0; i < 8; i++){
         for (int j = 0; j < 8; j++){
             fprintf(out, "%d ", matrix[posIBlock+i][posJBlock+j]);
+            if(i == j){
+                polynom += pow((double)matrix[posIBlock+i][posJBlock+j], (double)i);
+            }
         }
         fprintf(out,"\n");
     }
+    fprintf(out, "%lf", polynom);
     fclose(out);
 }
 
