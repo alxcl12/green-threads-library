@@ -15,7 +15,7 @@ typedef struct position_str{
     int j;
 }position;
 
-int matrix[HEIGHT][WIDTH];
+int *matrix;
 
 char* itoa(int val, int base){
 	static char buf[32] = {0};
@@ -38,7 +38,8 @@ void read_matrix(void){
 
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
-            fscanf(file, "%d", &matrix[i][j]);
+            int pos = i * WIDTH + j;
+            fscanf(file, "%d", &matrix[pos]);
         }
     }
     fclose(file);
@@ -80,9 +81,11 @@ void write_block(int posIBlock, int posJBlock, int index)
     double polynom = 0;
     for (int i = 0; i < 8; i++){
         for (int j = 0; j < 8; j++){
-            fprintf(out, "%d ", matrix[posIBlock+i][posJBlock+j]);
+            int pos = ((i + posIBlock) * WIDTH) + j + posJBlock;
+
+            fprintf(out, "%d ", matrix[pos]);
             if(i == j){
-                polynom += pow((double)matrix[posIBlock+i][posJBlock+j], (double)i);
+                polynom += pow((double)matrix[pos], (double)i);
             }
         }
         fprintf(out,"\n");
@@ -92,6 +95,7 @@ void write_block(int posIBlock, int posJBlock, int index)
 }
 
 int main(){
+    matrix = (int*) malloc(WIDTH*HEIGHT*sizeof(int));
     read_matrix();
     gthread_init();
 
@@ -128,6 +132,6 @@ int main(){
     long long time = endTime - startTime;
 
     printf("%lld\n", time);
-
+    free(matrix);
     return 0;
 }
