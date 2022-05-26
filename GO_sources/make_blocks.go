@@ -24,12 +24,7 @@ var matrix [HEIGHT][WIDTH]int;
 func write_block(wg *sync.WaitGroup, iBlock int, jBlock int, count int){
 	var filename_out = "out/blocks/block" + strconv.Itoa(count)
 
-	out, err := os.Create(filename_out)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer out.Close()
+	out, _ := os.Create(filename_out)
 
 	bufr := bufio.NewWriter(out)
 	var polynom float64 = 0;

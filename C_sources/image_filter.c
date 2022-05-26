@@ -90,6 +90,8 @@ void read_picture(const char* filename){
                 rgbImage.b[(i * WIDTH) + j] = b;
             }
         }
+    } else{
+        printf("Error reading picture\n");
     }
 
     fclose(filePointer);
@@ -168,6 +170,14 @@ int main(){
     //write to file
     FILE* test;
     test = fopen("out/image/test.ppm", "wb");
+    if(test == NULL){
+        printf("Error writing file\n");
+        free(rgbImage.r);
+        free(rgbImage.g);
+        free(rgbImage.b);
+    return 0;
+    }
+
     fprintf(test, "P6\n# CREATOR: GIMP PNM Filter Version 1.1\n800 600\n255\n");
     for (int i = 0; i < HEIGHT; i++)
     {

@@ -13,27 +13,12 @@ func copy(wg *sync.WaitGroup, index int) {
 	var filename_in = "../input/files/tst" + strconv.Itoa(index)
 	var filename_out = "out/files/out" + strconv.Itoa(index)
 
-	//fmt.Println(filename_in)
-	in, err := os.Open(filename_in)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer in.Close()
-
-	out, err := os.Create(filename_out)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer out.Close()
-
-	// create a buffer to keep chunks that are read
+	in, _ := os.Open(filename_in)
+	out, _ := os.Create(filename_out)
 
 	buffer := make([]byte, 1024)
 
 	for {
-		// read a chunk
 		n, err := in.Read(buffer)
 		if err != nil && err != io.EOF {
 			panic(err)
