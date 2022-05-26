@@ -9,6 +9,7 @@
 
 #define WIDTH 800
 #define HEIGHT 600
+#define NR_BLOCKS 7500
 
 typedef struct position_str{
     int i;
@@ -16,6 +17,8 @@ typedef struct position_str{
 }position;
 
 int *matrix;
+int *local_threads;
+position* pos;
 
 char* itoa(int val, int base){
 	static char buf[32] = {0};
@@ -59,8 +62,7 @@ void shuffle(position *array, int n)
     }
 }
 
-void write_block(int posIBlock, int posJBlock, int index)
-{
+void write_block(int posIBlock, int posJBlock, int index){
     FILE *out;
 
     char filename_out[19] = "out/blocks/block";
@@ -99,8 +101,9 @@ int main(){
     read_matrix();
     gthread_init();
 
-    int threads[7500];
-    position pos[7500];
+    local_threads = (int*) malloc(NR_BLOCKS * sizeof(int));
+    pos = (position*) malloc(NR_BLOCKS * sizeof(position));
+
     int counterPos = 0;
     int counter = 0;
 
@@ -112,19 +115,19 @@ int main(){
         }
     }
 
-    shuffle(pos, 7500);
+    shuffle(pos, NR_BLOCKS);
 
     struct timeval start,stop;
     gettimeofday(&start, NULL);
     long long startTime = (long long)start.tv_sec * 1000 + (long long)start.tv_usec / 1000;
 
-    for(int i=0; i<7500; i++){
-        threads[counter] = gthread_run(write_block,pos[i].i,pos[i].j,i);
+    for(int i=0; i<NR_BLOCKS; i++){
+        local_threads[counter] = gthread_run(write_block,pos[i].i,pos[i].j,i);
         counter++;
     }
 
     for(int i = 0;i<counter;i++){
-        gthread_join(threads[i]);
+        gthread_join(local_threads[i]);
     }
 
     gettimeofday(&stop, NULL);
@@ -133,5 +136,7 @@ int main(){
 
     printf("%lld\n", time);
     free(matrix);
+    free(pos);
+    free(local_threads);
     return 0;
 }
