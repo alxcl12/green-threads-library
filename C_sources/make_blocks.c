@@ -31,6 +31,10 @@ char* itoa(int val, int base){
 void read_matrix(void){
     FILE* file;
     file = fopen("../input/matrix/matrix.in", "r");
+    if(file == NULL){
+        printf("Error reading matrix file\n");
+        return;
+    }
 
     for (int i = 0; i < HEIGHT; i++){
         for (int j = 0; j < WIDTH; j++){
@@ -68,6 +72,11 @@ void write_block(int posIBlock, int posJBlock, int index)
     //printf("%s\n",filename_out);
 
     out = fopen(filename_out, "w");
+    if(out == NULL){
+        printf("Error opening block file\n");
+        return;
+    }
+
     double polynom = 0;
     for (int i = 0; i < 8; i++){
         for (int j = 0; j < 8; j++){
