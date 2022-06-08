@@ -1,8 +1,8 @@
 #include "gthreads.h"
 
-#define MAX_THREADS 7520
-#define STACK_SIZE 4096
-#define NANOSECONDS 100
+#define MAX_THREADS 7510
+#define STACK_SIZE 2048
+#define NANOSECONDS 1000
 
 gthread_mutex mut;
 
@@ -134,15 +134,6 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
         }
         pos++;
     }
-    // for (i = 0;i < MAX_THREADS; i++){
-    //     if (i == MAX_THREADS){
-    //         exit(-1);
-    //     }
-    //     else if (threads[i].state == Unused && i!=0){
-    //         thr = &threads[i];
-    //         break;
-    //     }
-    // }
 
     stack = malloc(STACK_SIZE);
     if (!stack){
