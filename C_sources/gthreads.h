@@ -6,6 +6,10 @@
 #include <sys/time.h>
 #include <stdarg.h>
 
+#define MAX_THREADS 7510
+#define STACK_SIZE 2048
+#define NANOSECONDS 1000
+
 typedef struct gthr {
     ucontext_t context;
     enum {

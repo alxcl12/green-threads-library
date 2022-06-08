@@ -10,7 +10,6 @@ import (
 const WIDTH = 800;
 const HEIGHT = 600;
 
-
 type RGBImage struct {
     r []int
     g []int

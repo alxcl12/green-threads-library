@@ -1,9 +1,5 @@
 #include "gthreads.h"
 
-#define MAX_THREADS 7510
-#define STACK_SIZE 2048
-#define NANOSECONDS 1000
-
 gthread_mutex mut;
 
 gthread threads[MAX_THREADS];
@@ -98,7 +94,6 @@ void gthread__resume_timer(){
 
 void gthread__finish_runner(){
     threads[thread_currrent_id].state = Finished;
-    //free(threads[thread_currrent_id].context.uc_stack.ss_sp);
     #ifdef DEBUG
     printf("COUNTER: %d\n", cn);
     #endif
@@ -233,81 +228,3 @@ void gthread_mutex_unlock(gthread_mutex *mutex){
         mutex->owner = -1;
     }
 }
-
-void a(int a,int b, int c){
-    printf("A for the first time\n");
-    gthread_mutex_lock(&mut);
-    for(int i=0;i< 1<<28;i++){
-
-    }
-
-    for(int i=0; i< 1<<20;i++){
-        if(i == 1<<9){
-            gthread_mutex_unlock(&mut);
-            printf("a\n");
-        }
-    }
-    printf("Done a\n");
-}
-
-void b(int a,int b, int c){
-    gthread_mutex_lock(&mut);
-    gthread_mutex_unlock(&mut);
-    for(int i=0; i< 1<<15;i++){
-        if(i == 1<<10){
-            printf("b\n");
-        }
-    }
-    printf("Done b\n");
-}
-
-void c(int a,int b, int c){
-    for(int i=0; i< 1<<10;i++){
-        if(i==1<<3){
-            printf("c\n");
-        }
-    }
-    printf("Done c\n");
-}
-
-void d(int a,int b, int c){
-    for(int i=0; i< 1<<10;i++){
-        if(i==1<<7){
-            printf("d\n");
-        }
-    }
-    printf("Done d\n");
-}
-
-// int main(void){
-//     gthread_mutex_init(&mut);
-//     int p1,p2,p3,p4;
-//     gthread_init();
-
-//     p1=gthread_run(a,1,2,3);
-//     p2=gthread_run(b,1,2,3);
-//     p3=gthread_run(c,1,2,3);
-//     p4=gthread_run(d,1,2,3);
-
-
-//     for(int i = 0; i < 1<<28;i++){
-//         if(i==1<<27){
-//             printf("Hey\n");
-//         }
-//     }
-//         for(int i = 0; i < 1<<28;i++){
-//         if(i==1<<27){
-//             printf("Hey2\n");
-//         }
-//     }
-//     gthread_join(p4);
-//     gthread_join(p3);
-//     gthread_join(p2);
-//     gthread_join(p1);
-
-
-//     int x;
-//     printf("Hey LAST\n");
-//     return 0;
-// }
-
