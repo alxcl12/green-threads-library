@@ -18,6 +18,7 @@ ucontext_t finish_contexts[MAX_THREADS];
 
 int first_time = 0;
 struct itimerval timer;
+static int pos = 1;
 
 void gthread__schedule(){
     #ifdef DEBUG
@@ -121,16 +122,27 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
     unsigned char *stack, *finish_stack;
     gthread *thr;
 
-    int i=0;
-    for (i = 0;i < MAX_THREADS; i++){
-        if (i == MAX_THREADS){
-            exit(-1);
-        }
-        else if (threads[i].state == Unused && i!=0){
-            thr = &threads[i];
+    if(pos >= MAX_THREADS){
+        exit(-1);
+    }
+
+    while(pos < MAX_THREADS){
+        if(threads[pos].state == Unused){
+            thr = &threads[pos];
+            pos++;
             break;
         }
+        pos++;
     }
+    // for (i = 0;i < MAX_THREADS; i++){
+    //     if (i == MAX_THREADS){
+    //         exit(-1);
+    //     }
+    //     else if (threads[i].state == Unused && i!=0){
+    //         thr = &threads[i];
+    //         break;
+    //     }
+    // }
 
     stack = malloc(STACK_SIZE);
     if (!stack){
@@ -141,7 +153,7 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
     thr->context.uc_stack.ss_sp = stack;
     thr->context.uc_stack.ss_size = STACK_SIZE;
     thr->context.uc_stack.ss_flags = 0;
-    thr->context.uc_link = &finish_contexts[i];
+    thr->context.uc_link = &finish_contexts[pos - 1];
 
     sigemptyset(&thr->context.uc_sigmask);
 
@@ -153,16 +165,16 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
     if (!finish_stack){
         exit(-1);
     }
-    getcontext(&finish_contexts[i]);
+    getcontext(&finish_contexts[pos - 1]);
 
-    finish_contexts[i].uc_stack.ss_sp = finish_stack;
-    finish_contexts[i].uc_stack.ss_size = STACK_SIZE/8;
-    finish_contexts[i].uc_stack.ss_flags = 0;
-    finish_contexts[i].uc_link = &threads[0].context;
+    finish_contexts[pos - 1].uc_stack.ss_sp = finish_stack;
+    finish_contexts[pos - 1].uc_stack.ss_size = STACK_SIZE/8;
+    finish_contexts[pos - 1].uc_stack.ss_flags = 0;
+    finish_contexts[pos - 1].uc_link = &threads[0].context;
 
-    sigemptyset(&finish_contexts[i].uc_sigmask);
+    sigemptyset(&finish_contexts[pos - 1].uc_sigmask);
 
-    makecontext(&finish_contexts[i], gthread__finish_runner, 0);
+    makecontext(&finish_contexts[pos - 1], gthread__finish_runner, 0);
 
     if (first_time == 0){
         getcontext(&threads[0].context);
@@ -177,7 +189,7 @@ int gthread_run(void *func, int arg1, int arg2, int arg3){
         setitimer(ITIMER_REAL, &timer, NULL);
         first_time = 1;
     }
-    return i;
+    return pos - 1;
 }
 
 void gthread_join(int thread){
